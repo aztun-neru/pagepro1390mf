@@ -1,14 +1,20 @@
 # pagepro1390mf — CUPS driver for Konica Minolta PagePro 1390MF
 
-A Linux/macOS CUPS driver for the Konica Minolta **PagePro 1390MF**, a GDI
+A Linux CUPS driver for the Konica Minolta **PagePro 1390MF**, a GDI
 (host-based) laser printer with no PCL/PostScript support. The printer's only
 official driver is Windows-only, so this is a clean-room reimplementation of
 its proprietary "MFPXDMA" wire protocol.
 
 ## Status
 
-Working. Prints text, raster and vector content at 600×600 dpi on A4, verified
-against the original Windows driver byte-for-byte and on live hardware.
+Working **on Linux** — prints text, raster and vector content at 600×600 dpi
+on A4, verified against the original Windows driver byte-for-byte and on live
+hardware.
+
+**macOS**: print over the network via a Linux host (IPP) — this is the
+recommended and verified path. A direct USB install on macOS is **not**
+supported: modern macOS System Integrity Protection (SIP) blocks writing the
+filter/backend into `/usr/libexec/cups`, which the native install requires.
 
 ## Scope
 

@@ -16,7 +16,7 @@ This produces `build/rastertopagepro1390`. On macOS a universal (arm64 + x86_64)
 
 Requires `python3-usb` (installed automatically if missing). Creates queue `pagepro1390`.
 
-## macOS install
+## macOS install (experimental — SIP-blocked on modern macOS)
 
 ```sh
 ./install/install-macos.sh
