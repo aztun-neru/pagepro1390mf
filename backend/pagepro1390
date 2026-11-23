@@ -1,0 +1,131 @@
+#!/usr/bin/python3
+import sys
+import time
+
+URI = "pagepro1390://usb"
+ATMOVE = b"\xff\x06\x00\x00\x00\x00\x08\x00"
+ESC_FF = b"\x1b\xff-12345X"
+FINAL_UEL = b"\x1b%-12345X@PJL\r\n@PJL EOJ\r\n\x1b%-12345X"
+
+
+def split_stream(data):
+    if len(data) < 160 + 96 + 98 or data[160:162] != b"\x0b\x12":
+        raise ValueError("invalid MFPXDMA page header")
+
+    chunks = [data[:160]]
+    pos = 160
+    pages = 0
+
+    while data[pos:pos + 2] == b"\x0b\x12":
+        if pos + 96 > len(data) or data[pos + 64:pos + 66] != b"\x0b\x04":
+            raise ValueError("invalid MFPXDMA page setup")
+        chunks.append(data[pos:pos + 96])
+        pos += 96
+
+        band_start = pos
+        if data[pos:pos + 3] != b"\x0b\x12\x0c":
+            raise ValueError("missing MFPXDMA band header")
+        jbig_start = pos + 18
+        if data[jbig_start:jbig_start + 8] != ATMOVE:
+            raise ValueError("invalid PagePro JBIG header")
+        jbig_end = data.find(b"\xff\x02", jbig_start + 8)
+        if jbig_end < 0:
+            raise ValueError("unterminated PagePro JBIG stream")
+        jbig_end += 2
+
+        pos = jbig_end
+        if data[pos:pos + len(ESC_FF)] != ESC_FF:
+            raise ValueError("invalid MFPXDMA band tail")
+        pos += len(ESC_FF)
+        while pos < len(data) and data[pos] == 0:
+            pos += 1
+
+        if data[pos:pos + 3] != b"\x0b\x06\x1a":
+            raise ValueError("missing MFPXDMA checksum record")
+        pos = (pos + 6 + 31) & ~31
+        if data[pos:pos + 3] != b"\x0b\x08\x1f":
+            raise ValueError("missing MFPXDMA popcount record")
+        pos = (pos + 8 + 31) & ~31
+        if data[pos:pos + 4] != b"\x0b\x04\x18\xd9":
+            raise ValueError("missing MFPXDMA band terminator")
+        pos += 32
+
+        chunks.append(data[band_start:pos])
+        pages += 1
+
+    if pages == 0 or pos + 98 != len(data):
+        raise ValueError("invalid MFPXDMA job length")
+    if data[pos:pos + 4] != b"\x0b\x04\x33\xbe" or data[pos + 64:] != FINAL_UEL:
+        raise ValueError("invalid MFPXDMA job terminator")
+    chunks.append(data[pos:])
+    return chunks
+
+
+def find_printer():
+    import usb.core
+    return usb.core.find(idVendor=0x132B, idProduct=0x2035)
+
+
+def discover():
+    if find_printer() is not None:
+        print(f'direct {URI} "Konica Minolta PagePro 1390MF" '
+              '"Konica Minolta PagePro 1390MF USB" '
+              '"MFG:KONICA MINOLTA;MDL:PagePro 1390MF;CLS:PRINTER;"')
+    return 0
+
+
+def send(data):
+    import usb.core
+    import usb.util
+
+    dev = find_printer()
+    if dev is None:
+        raise RuntimeError("printer not found")
+    try:
+        dev.set_configuration()
+    except usb.core.USBError:
+        pass
+    intf = dev.get_active_configuration()[(1, 0)]
+    ep = usb.util.find_descriptor(
+        intf,
+        custom_match=lambda e: usb.util.endpoint_direction(e.bEndpointAddress)
+        == usb.util.ENDPOINT_OUT,
+    )
+    if ep is None or ep.bEndpointAddress != 0x01:
+        raise RuntimeError("printer USB endpoint 0x01 not found")
+    if dev.is_kernel_driver_active(1):
+        dev.detach_kernel_driver(1)
+    usb.util.claim_interface(dev, 1)
+    try:
+        for chunk in split_stream(data):
+            written = dev.write(ep.bEndpointAddress, chunk, timeout=10000)
+            if written != len(chunk):
+                raise OSError(f"short USB write: {written} of {len(chunk)} bytes")
+            print(f"INFO: pagepro1390: USB write {written} bytes", file=sys.stderr)
+            time.sleep(0.15)
+    finally:
+        usb.util.release_interface(dev, 1)
+        usb.util.dispose_resources(dev)
+
+
+def main():
+    if len(sys.argv) == 1:
+        return discover()
+    if len(sys.argv) not in (6, 7):
+        print("ERROR: pagepro1390: invalid CUPS backend arguments", file=sys.stderr)
+        return 1
+    try:
+        if len(sys.argv) == 7:
+            with open(sys.argv[6], "rb") as source:
+                data = source.read()
+        else:
+            data = sys.stdin.buffer.read()
+        send(data)
+        return 0
+    except Exception as exc:
+        print(f"ERROR: pagepro1390: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

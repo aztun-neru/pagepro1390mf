@@ -1,0 +1,67 @@
+*PPD-Adobe: "4.3"
+*% ============================================================
+*%  Konica Minolta PagePro 1390MF - CUPS raster driver PPD
+*%  Filter: rastertopagepro1390 (JBIG/JBigcomp2, MFPXDMA protocol)
+*% ============================================================
+*FormatVersion: "4.3"
+*FileVersion: "1.0"
+*LanguageVersion: English
+*LanguageEncoding: ISOLatin1
+*PCFileName: "PP1390MF.PPD"
+*Manufacturer: "Konica Minolta"
+*Product: "(PagePro 1390MF)"
+*ModelName: "Konica Minolta PagePro 1390MF"
+*ShortNickName: "PagePro 1390MF"
+*NickName: "Konica Minolta PagePro 1390MF, rastertopagepro1390 1.0"
+*PSVersion: "(3010.000) 0"
+*LanguageLevel: "3"
+*ColorDevice: False
+*DefaultColorSpace: Gray
+*FileSystem: False
+*Throughput: "20"
+*LandscapeOrientation: Plus90
+*TTRasterizer: Type42
+*DriverType: F
+*cupsVersion: 1.4
+*cupsModelNumber: 0
+*cupsManualCopies: True
+*cupsColorSpace: 3
+*cupsColorOrder: 0
+*cupsCompression: 0
+*cupsBitsPerPixel: 1
+*cupsBitsPerColor: 1
+*cupsFilter: "application/vnd.cups-raster 0 rastertopagepro1390"
+*1284DeviceID: "MFG:KONICA MINOLTA;MDL:PagePro 1390MF;CLS:PRINTER;DES:KONICA MINOLTA PagePro 1390MF;"
+
+*OpenUI *PageSize/Media Size: PickOne
+*OrderDependency: 10 AnySetup *PageSize
+*DefaultPageSize: A4
+*PageSize A4/A4: "<</PageSize[595.28 841.89]/ImagingBBox null>>setpagedevice"
+*End
+*CloseUI: *PageSize
+
+*OpenUI *PageRegion/Media Size: PickOne
+*OrderDependency: 10 AnySetup *PageRegion
+*DefaultPageRegion: A4
+*PageRegion A4/A4: "<</PageSize[595.28 841.89]/ImagingBBox null>>setpagedevice"
+*End
+*CloseUI: *PageRegion
+
+*DefaultImageableArea: A4
+*ImageableArea A4/A4: "17.28 15.72 577.99 826.17"
+*DefaultPaperDimension: A4
+*PaperDimension A4/A4: "595.28 841.89"
+*HWMargins: "17.28 15.72 17.28 15.72"
+
+*OpenUI *Resolution/Resolution: PickOne
+*OrderDependency: 20 AnySetup *Resolution
+*DefaultResolution: 600dpi
+*Resolution 600dpi/600 dpi: "<</HWResolution[600 600]>>setpagedevice"
+*End
+*CloseUI: *Resolution
+
+*DefaultFont: Courier
+*Font AvantGarde-Book: Standard "(001.006S)" Standard ROM
+*Font Courier: Standard "(002.004S)" Standard ROM
+*Font Helvetica: Standard "(001.007S)" Standard ROM
+*Font Times-Roman: Standard "(001.007S)" Standard ROM
