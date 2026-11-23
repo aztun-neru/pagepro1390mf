@@ -10,6 +10,12 @@ its proprietary "MFPXDMA" wire protocol.
 Working. Prints text, raster and vector content at 600×600 dpi on A4, verified
 against the original Windows driver byte-for-byte and on live hardware.
 
+## Scope
+
+**Print only.** This driver covers the USB print path (MFPXDMA + JBIG). The
+scanner and fax functions are **not** supported yet — reverse-engineering of
+the scan path is still in progress.
+
 ## How it works
 
 ```
