@@ -292,7 +292,7 @@ static void emit_page_header(struct buf *b)
     bpad_to(b, 0xa0);
 }
 
-static void emit_start_page(struct buf *b, unsigned short copies)
+static void emit_start_page(struct buf *b)
 {
     unsigned char setup[14] = {
         0x01,                   /* paper: A4 */
@@ -300,13 +300,12 @@ static void emit_start_page(struct buf *b, unsigned short copies)
         0x3c, 0x3c,             /* 600 x 600 dpi / 10 */
         0x01,                   /* tray: default */
         0x00,                   /* simplex */
-        0x00, 0x00,             /* copies (LE) */
+        0x01, 0x00,             /* copies = 1 (printer ignores this field;
+                                   real copies via pdftopdf page duplication) */
         0x00, 0x00,             /* margin x = 144 (LE) */
         0x00, 0x00,             /* margin y = 131 (LE) */
         0x01, 0x00
     };
-    setup[6] = (unsigned char) copies;
-    setup[7] = (unsigned char) (copies >> 8);
     setup[8] = (unsigned char) MARGIN_X;
     setup[9] = (unsigned char) (MARGIN_X >> 8);
     setup[10] = (unsigned char) MARGIN_Y;
@@ -388,7 +387,6 @@ static void write_chunk(const unsigned char *d, size_t n)
 int main(int argc, char *argv[])
 {
     struct raster r = { NULL, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL };
-    unsigned short copies;
     int page = 0;
 
     if (argc < 6 || argc > 7) {
@@ -397,14 +395,6 @@ int main(int argc, char *argv[])
                 argv[0]);
         return 1;
     }
-    {
-        char *end;
-        long n = strtol(argv[4], &end, 10);
-        if (!argv[4][0] || *end || n < 1 || n > 65535)
-            die("copies must be in range 1..65535");
-        copies = (unsigned short) n;
-    }
-
     r.f = stdin;
     if (argc == 7) {
         r.f = fopen(argv[6], "rb");
@@ -437,7 +427,7 @@ int main(int argc, char *argv[])
             emit_page_header(&ch1);
             write_chunk(ch1.d, ch1.len);
         }
-        emit_start_page(&ch2, copies);
+        emit_start_page(&ch2);
         emit_band(&ch3, jbig, jlen, popcount);
         write_chunk(ch2.d, ch2.len);
         write_chunk(ch3.d, ch3.len);
